@@ -205,6 +205,23 @@ open class AEXMLElement {
         return child
     }
     
+    
+    // MARK: - XML Write
+    
+    /**
+     Adds child XML element to `self`.
+     
+     - parameter child: Child XML element to add.
+     - parameter index: Index to add the child to
+     
+     - returns: Child XML element with `self` as `parent`.
+     */
+    @discardableResult open func addChild(_ child: AEXMLElement, atIndex index: Int) -> AEXMLElement {
+        child.parent = self
+        children.insert(child, at: index)
+        return child
+    }
+    
     /**
         Adds child XML element to `self`.
         
@@ -239,7 +256,7 @@ open class AEXMLElement {
     }
     
     fileprivate func removeChild(_ child: AEXMLElement) {
-        if let childIndex = children.firstIndex(where: { $0 === child }) {
+        if let childIndex = children.index(where: { $0 === child }) {
             children.remove(at: childIndex)
         }
     }
@@ -310,7 +327,44 @@ open class AEXMLElement {
         let chars = CharacterSet(charactersIn: "\n\t")
         return xml.components(separatedBy: chars).joined(separator: "")
     }
-    
+
+    /// Complete hierarchy of `self` and `children` in **XML** formatted String
+    open var xmlRaw: String {
+        var xml = String()
+        
+        // open element
+        xml += indent(withDepth: parentsCount - 1)
+        xml += "<\(name)"
+        
+        if attributes.count > 0 {
+            // insert attributes
+            for (key, value) in attributes {
+                xml += " \(key)=\"\(value)\""
+            }
+        }
+        
+        if value == nil && children.count == 0 {
+            // close element
+            xml += " />"
+        } else {
+            if children.count > 0 {
+                // add children
+                xml += ">\n"
+                for child in children {
+                    xml += "\(child.xmlRaw)\n"
+                }
+                // add indentation
+                xml += indent(withDepth: parentsCount - 1)
+                xml += "</\(name)>"
+            } else {
+                // insert string value and close element
+                xml += ">\(string)</\(name)>"
+            }
+        }
+        
+        return xml
+    }
+
     /// Same as `xmlString` but with 4 spaces instead '\t' characters
     open var xmlSpaces: String {
         let chars = CharacterSet(charactersIn: "\t")
@@ -321,15 +375,15 @@ open class AEXMLElement {
 public extension String {
     
     /// String representation of self with XML special characters escaped.
-    var xmlEscaped: String {
+    public var xmlEscaped: String {
         // we need to make sure "&" is escaped first. Not doing this may break escaping the other characters
         var escaped = replacingOccurrences(of: "&", with: "&amp;", options: .literal)
         
         // replace the other four special characters
-        let escapeChars = ["<" : "&lt;", ">" : "&gt;", "'" : "&apos;", "\"" : "&quot;"]
-        for (char, echar) in escapeChars {
-            escaped = escaped.replacingOccurrences(of: char, with: echar, options: .literal)
-        }
+//        let escapeChars = ["<" : "&lt;", ">" : "&gt;", "'" : "&apos;", "\"" : "&quot;"]
+//        for (char, echar) in escapeChars {
+//            escaped = escaped.replacingOccurrences(of: char, with: echar, options: .literal)
+//        }
         
         return escaped
     }
