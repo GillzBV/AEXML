@@ -296,7 +296,7 @@ open class AEXMLElement {
         if attributes.count > 0 {
             // insert attributes
             for (key, value) in attributes {
-                xml += " \(key)=\"\(value)\""
+                xml += " \(key)=\"\(value.xmlEscaped)\""
             }
         }
         
@@ -315,7 +315,7 @@ open class AEXMLElement {
                 xml += "</\(name)>"
             } else {
                 // insert string value and close element
-                xml += ">\(string)</\(name)>"
+                xml += ">\(string.xmlEscaped)</\(name)>"
             }
         }
         
